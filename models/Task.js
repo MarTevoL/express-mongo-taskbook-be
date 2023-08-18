@@ -9,7 +9,11 @@ const taskSchema = mongoose.Schema({
     default: "pending",
     require: true,
   },
-  assignee: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  assignee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
   isDeleted: { type: Boolean, enum: [true, false], default: false },
 });
 
