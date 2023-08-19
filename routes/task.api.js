@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { body } = require("express-validator");
 
 const {
   getTasks,
@@ -7,6 +8,8 @@ const {
   createTask,
   updateStatus,
   deleteTask,
+  assignTask,
+  unassignTask,
 } = require("../controllers/task.controller");
 
 /**
@@ -28,7 +31,12 @@ router.get("/:id", getTaskById);
  * @description create a Task
  * @access public
  */
-router.post("/", createTask);
+router.post(
+  "/",
+  body("name").notEmpty(),
+  body("description").notEmpty(),
+  createTask
+);
 
 /**
  * @route PUT api/Task
@@ -36,6 +44,20 @@ router.post("/", createTask);
  * @access public
  */
 router.put("/:id", updateStatus);
+
+/**
+ * @route PUT api/Task
+ * @description assign user to a Task
+ * @access public
+ */
+router.put("/assign/:id", assignTask);
+
+/**
+ * @route PUT api/Task
+ * @description unassign user to a Task
+ * @access public
+ */
+router.put("/unassign/:id", unassignTask);
 
 /**
  * @route Delete api/Task

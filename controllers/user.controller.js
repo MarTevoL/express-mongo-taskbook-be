@@ -1,6 +1,7 @@
 const { sendResponse, AppError } = require("../helpers/utils.js");
 const User = require("../models/User.js");
 const mongoose = require("mongoose");
+const { validationResult } = require("express-validator");
 
 const userController = {};
 
@@ -40,8 +41,14 @@ userController.searchUser = async (req, res, next) => {
 
 userController.createUser = async (req, res, next) => {
   try {
+    const result = validationResult(req);
+    if (!result.isEmpty())
+      throw new AppError(
+        401,
+        "Bad Request",
+        "Create User Error check by express-validator"
+      );
     const userData = req.body;
-    if (!userData) throw new AppError(401, "Bad Request", "Create User Error");
 
     // const checkUserName = await User.find({ name: userData.name });
     // if (checkUserName)

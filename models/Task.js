@@ -12,7 +12,7 @@ const taskSchema = mongoose.Schema({
   assignee: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    default: null,
+    default: "",
   },
   isDeleted: { type: Boolean, enum: [true, false], default: false },
 });

@@ -7,6 +7,7 @@ const {
   updateUserById,
   deleteUserById,
 } = require("../controllers/user.controller");
+const { body } = require("express-validator");
 
 /**
  * Search for an employee by name
@@ -30,7 +31,7 @@ router.get("/:name", searchUser);
  * @access private, manager
  * @requiredBody: name
  */
-router.post("/", createUser);
+router.post("/", body("name").notEmpty().isString(), createUser);
 
 /**
  * @route PUT api/User

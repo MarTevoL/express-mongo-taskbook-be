@@ -3,11 +3,20 @@ const Task = require("../models/Task");
 const User = require("../models/User");
 const { sendResponse, AppError } = require("../helpers/utils.js");
 const { ObjectId } = require("mongodb");
+const { validationResult } = require("express-validator");
 
 const taskController = {};
 
 taskController.createTask = async (req, res, next) => {
   try {
+    const result = validationResult(req);
+    if (!result.isEmpty()) {
+      throw new AppError(
+        400,
+        "Bad Request",
+        "Missing require info check by express-validator"
+      );
+    }
     const { name, description, assignee, status } = req.body;
     // if (!name || !description || !status)
     //   throw new AppError(401, "Bad Request", "Missing require info");
@@ -122,6 +131,63 @@ taskController.updateStatus = async (req, res, next) => {
       null,
       "Update Task Success"
     );
+  } catch (error) {
+    next(error);
+  }
+};
+
+taskController.assignTask = async (req, res, next) => {
+  try {
+    const taskId = req.params.id;
+    const { userId } = req.body;
+
+    if (!mongoose.isValidObjectId(taskId))
+      throw new AppError(400, "Bad Request", "Invalid task id");
+    if (!mongoose.isValidObjectId(userId))
+      throw new AppError(400, "Bad Request", "Invalid user id");
+
+    const task = await Task.findOne({ _id: taskId });
+    const userAssignTask = await User.findOne({ _id: userId });
+
+    if (!task) throw new AppError(404, "Bad Request", "Task not found");
+    if (!userAssignTask)
+      throw new AppError(404, "Bad Request", "Assignee not found");
+
+    task.assignee = new ObjectId(userId);
+    await task.save();
+    userAssignTask.tasks.push(new ObjectId(taskId));
+    await userAssignTask.save();
+
+    sendResponse(res, 200, true, { data: task }, null, "Task assign success");
+  } catch (error) {
+    next(error);
+  }
+};
+
+taskController.unassignTask = async (req, res, next) => {
+  try {
+    const taskId = req.params.id;
+
+    if (!mongoose.isValidObjectId(taskId))
+      throw new AppError(400, "Bad Request", "Invalid task id");
+    const task = await Task.findOne({ _id: taskId });
+
+    if (!task) throw new AppError(404, "Bad Request", "Task not found");
+
+    const assignee = new ObjectId(task.assignee).toString();
+    const user = await User.findOne({ _id: assignee });
+
+    if (!user)
+      throw new AppError(
+        404,
+        "Bad Request",
+        "User not found in when unassign task"
+      );
+
+    await User.updateOne({ _id: assignee }, { $pull: { tasks: taskId } });
+    await Task.updateOne({ _id: taskId }, { $unset: { assignee: "" } });
+
+    sendResponse(res, 200, true, { data: task }, null, "Task unassign success");
   } catch (error) {
     next(error);
   }
