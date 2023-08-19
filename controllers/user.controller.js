@@ -48,12 +48,17 @@ userController.createUser = async (req, res, next) => {
         "Bad Request",
         "Create User Error check by express-validator"
       );
+
+    const { name } = req.body;
+    const checkName = await User.findOne({ name: name });
+    if (checkName)
+      throw new AppError(
+        401,
+        "Bad Reqest",
+        "User name invalid, please choose other name"
+      );
+
     const userData = req.body;
-
-    // const checkUserName = await User.find({ name: userData.name });
-    // if (checkUserName)
-    //   throw new AppError(401, "Bad Reqest", "User name invalid");
-
     const newUser = await User.create(userData);
 
     sendResponse(
